@@ -1,0 +1,91 @@
+# Service account and role creations for exporter pod 
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ndk-exporter
+  namespace: ntnx-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ndk-exporter
+rules:
+  - apiGroups: ["dataservices.nutanix.com"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["scheduler.nutanix.com"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ndk-exporter
+subjects:
+  - kind: ServiceAccount
+    name: ndk-exporter
+    namespace: ntnx-system
+roleRef:
+  kind: ClusterRole
+  name: ndk-exporter
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ndk-exporter
+  namespace: ntnx-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ndk-exporter
+  template:
+    metadata:
+      labels:
+        app: ndk-exporter
+    spec:
+      serviceAccountName: ndk-exporter
+      containers:
+        - name: exporter
+          image: arunkumarnutanix/ndk-exporter:latest
+          ports:
+            - name: http
+              containerPort: 8000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ndk-exporter
+  namespace: ntnx-system
+  labels:
+    app: ndk-exporter-svc
+spec:
+  selector:
+    app: ndk-exporter
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8000
+      targetPort: 8000
+
+---
+#service monitor to configure add this as scraping target to prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ndk-exporter
+  namespace: ntnx-system
+  labels:
+    prometheus.kommander.d2iq.io/select: "true" 
+spec:
+  selector:
+    matchLabels:
+      app: ndk-exporter-svc
+  namespaceSelector:
+    matchNames:
+      - ntnx-system
+  endpoints:
+    - port: http 
+      interval: 30s
