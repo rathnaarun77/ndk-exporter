@@ -29,7 +29,7 @@ A pre-configured Grafana dashboard is also provided and can be easily imported f
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/rathnaarun77/ndk-exporter/refs/heads/main/deploy-exporter.yaml 
 ```
-2. Import the NDK_Dashboard.json file to grafana and choose prometheus as the datasource.
+2. Import the `NDK_Dashboard.json` file to grafana and choose prometheus as the datasource.
 
 ### Grafana Dashboard Previews
 ![Dashboard Screenshot 1](https://raw.githubusercontent.com/rathnaarun77/ndk-exporter/main/dashboard_screenshot1.jpg)
